@@ -1,15 +1,25 @@
 # stupiddb
 
-FIXME: write description
+A very simple DB in clojure, it only has 5 commands.
 
 ## Usage
+;use the namespace
+(use 'stupiddb.core)
+;; create / init / load a db that saves every 30 seconds
+(def db (init-db "my-db-file.db" 30))
+;; work with it
+(db-assoc db :key :value)
+(db-get db :key)
+(db-dissoc :key)
 
-FIXME: write
+;close the db - you don't have to do this if your programm ends here it will just stop the DB from saving
+(close-db db)
 
 ## Installation
 
-FIXME: write
+use lein-search :P
 
 ## License
 
-FIXME: write
+Copyright 2010, Heinz N. Gies
+This code is under the same license as clojure, the EPL.
