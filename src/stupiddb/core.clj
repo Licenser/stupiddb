@@ -20,7 +20,8 @@
                       (if log
                         (recur (handle-log db log)
                                (read r false false))
-                        db)))))] 
+                        db))))
+		db)] 
        (assoc db :log (io/writer log)))))
 
 (defn load-db [db]
@@ -34,6 +35,7 @@
 
 (defn flush-db [db]
   (dosync
+   (println (:file @db))
    (with-open [w (io/writer (:file @db))]
      (binding [*out* w]
               (prn (:data @db))))
@@ -45,7 +47,7 @@
   (let [r {:data {}
            :file file
            :time time}
-        r (ref (load-log (load-db r)))]
+	r (ref (load-log (load-db r)))]
     (dosync 
      (alter r assoc :thread
             (doto
