@@ -1,6 +1,6 @@
 # stupiddb
 
-A very simple DB in clojure, it only has 5 commands.
+A very simple DB in clojure, it only has 6+2 commands.
 
 ## Usage
 ;use the namespace
