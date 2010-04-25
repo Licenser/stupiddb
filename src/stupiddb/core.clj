@@ -2,8 +2,8 @@
   (:import (java.io File PushbackReader)))
 
 (try
- (require '[clojure.contrib.duck-streams :as io])
- (catch Exception e (require '[clojure.contrib.io :as io])))
+ (require '[clojure.contrib.io :as io])
+ (catch Exception e (require '[clojure.contrib.duck-streams :as io])))
 
 (defn- write-log [db action key value]
   (binding [*out* (:log db)]
