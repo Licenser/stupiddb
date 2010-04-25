@@ -5,13 +5,10 @@
  (require '[clojure.contrib.duck-streams :as io])
  (catch Exception e (require '[clojure.contrib.io :as io])))
 
-
-
 (defn- write-log [db action key value]
   (binding [*out* (:log db)]
     (prn [action key value])
     (flush)))
-
 
 (defn db-get
   "Returns the value mapped to key in the db, nil or default if key is not present."
@@ -101,7 +98,6 @@ data in the case of a crash."
             (doto
                 (Thread.
                  (fn [] (while true
-                               (println "Saving!")
                                (dosync  (flush-db r))
                                (Thread/sleep (* 1000 time)))))
               (.start))))
