@@ -99,11 +99,11 @@ data in the case of a crash."
                 (Thread.
                  (fn [] (while true
                                (dosync  (flush-db r))
-                               (Thread/sleep (* 1000 time)))))
+                               (Thread/sleep (* 1000 (:time @r))))))
               (.start))))
     r))
 
-(defn- db-close [db]
+(defn db-close [db]
   "Closes a db, stops the auto saving and writes the entire log into the db file for faster startup."
   (.stop (:thread @db))
   (flush-db db)
