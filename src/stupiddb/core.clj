@@ -1,9 +1,23 @@
 (ns stupiddb.core
-  (:import (java.io File PushbackReader)))
+  (:import [java.io File PrintWriter PushbackReader FileInputStream FileOutputStream InputStreamReader]
+           [java.util.zip GZIPInputStream GZIPOutputStream]))
+
 
 (try
  (require '[clojure.contrib.io :as io])
  (catch Exception e (require '[clojure.contrib.duck-streams :as io])))
+
+(defn- dependant-writer [db arg]
+  (if (:gzip db)
+    (PrintWriter. (GZIPOutputStream. (FileOutputStream. arg)))
+    (io/writer arg)))
+
+(defn- dependant-reader [db arg] 
+  (if (:gzip db)
+    (PushbackReader.
+     (InputStreamReader.
+      (GZIPInputStream. (FileInputStream. arg))))
+    (PushbackReader. (io/reader arg))))
 
 (defn- write-log [db action key value]
   (binding [*out* (:log db)]
@@ -13,7 +27,7 @@
 (defn db-get
   "Returns the value mapped to key in the db, nil or default if key is not present."
   ([db key default] 
-     (or (get-in @db [:data key]) default))
+    (or (get-in @db [:data key]) default))
   ([db key]
      (db-get db key nil)))
 
@@ -54,10 +68,10 @@ then applys f with the value as first and args as following arguments and sets t
    :else db))
 
 (defn- load-log [db]
-  (let [log (File. (str (:file db) ".log"))]
+  (let [log (File. (:log-file db))]
      (let [db (if (.exists log)
                 (binding [*read-eval* false]
-                  (with-open [r (PushbackReader. (io/reader log))] 
+                  (with-open [r (PushbackReader. (io/reader log))]
                     (loop [db db log (read r false false)]
                       (if log
                         (recur (handle-log db log)
@@ -70,27 +84,29 @@ then applys f with the value as first and args as following arguments and sets t
   (let [f (File. (:file db))]
     (if (.exists f)
       (binding [*read-eval* false]
-        (with-open [r (PushbackReader. (io/reader f))]
+        (with-open [r (dependant-reader db f)]
           (assoc db :data (read r))))
       db)))
 
 
 (defn- flush-db [db]
   (dosync
-   (println (:file @db))
-   (with-open [w (io/writer (:file @db))]
+   (with-open [w (dependant-writer @db (File. (:file @db)))]
      (binding [*out* w]
               (prn (:data @db))))
       (.close (:log @db))
-         (alter db assoc :log (io/writer (str (:file @db)
-                                               ".log")))))
+      (alter db assoc
+             :log (io/writer (:log-file @db)))))
 
-(defn db-init [file time]
+(defn db-init [file time & {gzip :gzip}]
   "Initializes a db ref. If the db file (or file.log) already exists loads the data.
 The db is saved every time seconds, so a log is keeped for any manipulation to reconstruct
 data in the case of a crash."
-  (let [r {:data {}
-           :file file
+  (let [gzip (boolean gzip)
+        r {:data {}
+           :file (if gzip (str file ".gz") file)
+           :log-file (str file ".log")
+           :gzip gzip
            :time time}
 	r (ref (load-log (load-db r)))]
     (dosync 
