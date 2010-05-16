@@ -96,9 +96,11 @@ then applys f with the value as first and args as following arguments and sets t
 
 (defn- flush-db [db]
   (dosync
-   (with-open [w (dependant-writer @db (File. (:file @db)))]
-     (binding [*out* w]
-              (prn (:data @db))))
+   (send (:log @db) (fn flush-db-write-db-fn [out db]
+		      (with-open [w (dependant-writer db (File. (:file db)))]
+			(binding [*out* w]
+			  (prn (:data db))))
+		      out) @db)
       (send (:log @db) new-log @db)))
 
 (defn db-init [file time & {gzip :gzip}]
@@ -126,4 +128,6 @@ data in the case of a crash."
   "Closes a db, stops the auto saving and writes the entire log into the db file for faster startup."
   (.stop (:thread @db))
   (flush-db db)
-  (.close (:log @db)))
+  (send (:log @db) (fn [o] (.close o)))
+  (:data @db))
+
