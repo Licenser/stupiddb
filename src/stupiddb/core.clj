@@ -19,10 +19,15 @@
       (GZIPInputStream. (FileInputStream. arg))))
     (PushbackReader. (io/reader arg))))
 
-(defn- write-log [db action key value]
-  (binding [*out* (:log db)]
+(defn- write-log [out action key value]
+  (binding [*out* out]
     (prn [action key value])
-    (flush)))
+    (flush))
+  out)
+
+(defn- new-log [out db]
+  (.close out)
+  (io/writer (:log-file db)))
 
 (defn db-get
   "Returns the value mapped to key in the db, nil or default if key is not present."
@@ -38,19 +43,19 @@
 (defn db-assoc [db key value]
   "Associates key with value in the db."
   (dosync 
-   (write-log @db :assoc key value)
+   (send (:log @db) write-log  :assoc key value)
    (alter db update-in [:data] assoc key value)))
 
 (defn db-dissoc [db key]
   "Dissociates key in db."
   (dosync
-      (write-log @db :dissoc key nil)
+      (send (:log @db) write-log :dissoc key nil)
       (alter db update-in [:data] dissoc key)))
 
 (defn db-assoc-in [db ks v]
   "Associates a value in a nested map in the db. (same as update-in with constatly)."
   (dosync
-   (write-log @db :assoc-in ks v)
+   (send (:log @db) write-log :assoc-in ks v)
    (alter db update-in (vec (concat [:data] ks)) (constantly v))))
 
 (defn db-update-in [db ks f & args]
@@ -78,7 +83,7 @@ then applys f with the value as first and args as following arguments and sets t
                                (read r false false))
                         db))))
 		db)] 
-       (assoc db :log (io/writer log)))))
+       (assoc db :log (agent (io/writer log))))))
 
 (defn- load-db [db]
   (let [f (File. (:file db))]
@@ -94,9 +99,7 @@ then applys f with the value as first and args as following arguments and sets t
    (with-open [w (dependant-writer @db (File. (:file @db)))]
      (binding [*out* w]
               (prn (:data @db))))
-      (.close (:log @db))
-      (alter db assoc
-             :log (io/writer (:log-file @db)))))
+      (send (:log @db) new-log @db)))
 
 (defn db-init [file time & {gzip :gzip}]
   "Initializes a db ref. If the db file (or file.log) already exists loads the data.
