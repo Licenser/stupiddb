@@ -58,7 +58,7 @@
    (send (:log @db) write-log :assoc-in ks v)
    (alter db update-in (vec (concat [:data] ks)) (constantly v))))
 
-(defn dissoc-in [db ks]
+(defn db-dissoc-in [db ks]
   "Dissociates a key in a nested map in the db."
   (dosync
    (send (:log @db) write-log :dissoc-in ks)
