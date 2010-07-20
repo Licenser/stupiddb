@@ -3,7 +3,7 @@
 A very simple DB in clojure.
 
 Features:
-* Only 6 + 2 functions.
+* Only 7 + 2 functions.
 * Simple setup. (one of the +2 functions)
 * No finalizing code needed but possible. (second of the +2 functions can be omitted)
 * Crash save, the db is logging!
