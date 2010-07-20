@@ -58,6 +58,12 @@
    (send (:log @db) write-log :assoc-in ks v)
    (alter db update-in (vec (concat [:data] ks)) (constantly v))))
 
+(defn dissoc-in [db ks]
+  "Dissociates a key in a nested map in the db."
+  (dosync
+   (send (:log @db) write-log :dissoc-in ks)
+   (alter db update-in (into [:data] (butlast ks)) (last ks))))
+
 (defn db-update-in [db ks f & args]
   "Gets the value from a nested vector in db that is behind the kys ks
 then applys f with the value as first and args as following arguments and sets the new value"
