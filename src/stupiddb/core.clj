@@ -62,7 +62,7 @@
   "Dissociates a key in a nested map in the db."
   (dosync
    (send (:log @db) write-log :dissoc-in ks)
-   (alter db update-in (into [:data] (butlast ks)) (last ks))))
+   (alter db update-in (into [:data] (butlast ks)) dissoc (last ks))))
 
 (defn db-update-in [db ks f & args]
   "Gets the value from a nested vector in db that is behind the kys ks
