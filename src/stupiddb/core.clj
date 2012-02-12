@@ -27,7 +27,8 @@
   (io/writer (:log-file db)))
 
 (defn db-get
-  "Returns the value mapped to key in the db, nil or default if key is not present."
+  "Returns the value mapped to key in the db, nil or default if key is
+   not present."
   ([db key default] 
     (or (get-in @db [:data key]) default))
   ([db key]
@@ -69,7 +70,8 @@
 
 (defn db-update-in
   "Gets the value from a nested vector in db that is behind the kys ks
-then applys f with the value as first and args as following arguments and sets the new value"
+   then applys f with the value as first and args as following
+   arguments and sets the new value"
   [db ks f & args]
   (dosync
    (let [v (apply f (db-get-in db ks) args)]
@@ -115,8 +117,8 @@ then applys f with the value as first and args as following arguments and sets t
 
 (defn db-init
   "Initializes a db ref. If the db file (or file.log) already exists loads the data.
-The db is saved every time seconds, so a log is keeped for any manipulation to reconstruct
-data in the case of a crash."
+   The db is saved every time seconds, so a log is keeped for any
+   manipulation to reconstruct data in the case of a crash."
   [file time & {gzip :gzip}]
   (let [gzip (boolean gzip)
         r {:data {}
@@ -136,7 +138,8 @@ data in the case of a crash."
     r))
 
 (defn db-close
-  "Closes a db, stops the auto saving and writes the entire log into the db file for faster startup."
+  "Closes a db, stops the auto saving and writes the entire log into
+   the db file for faster startup."
   [db]
   (.stop (:thread @db))
   (flush-db db)
