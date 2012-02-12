@@ -33,37 +33,44 @@
   ([db key]
      (db-get db key nil)))
 
-(defn db-get-in [db ks]
+(defn db-get-in
   "Returns the value that is behind the vecotr ks in a nested map"
+  [db ks]
   (get-in @db (vec (concat [:data] ks))))
 
-(defn db-assoc [db key value]
+(defn db-assoc
   "Associates key with value in the db."
+  [db key value]
   (dosync 
    (send (:log @db) write-log  :assoc key value)
    (alter db update-in [:data] assoc key value)))
 
-(defn db-dissoc [db key]
+(defn db-dissoc
   "Dissociates key in db."
+  [db key]
   (dosync
       (send (:log @db) write-log :dissoc key nil)
       (alter db update-in [:data] dissoc key)))
 
-(defn db-assoc-in [db ks v]
-  "Associates a value in a nested map in the db. (same as update-in with constatly)."
+(defn db-assoc-in
+  "Associates a value in a nested map in the db. (same as update-in
+   with constatly)."
+  [db ks v]
   (dosync
    (send (:log @db) write-log :assoc-in ks v)
    (alter db update-in (vec (concat [:data] ks)) (constantly v))))
 
-(defn db-dissoc-in [db ks k]
+(defn db-dissoc-in
   "Dissociates a key in a nested map in the db."
+  [db ks k]
   (dosync
    (send (:log @db) write-log :dissoc-in [ks k] nil)
    (alter db update-in (concat [:data] ks) dissoc k)))
 
-(defn db-update-in [db ks f & args]
+(defn db-update-in
   "Gets the value from a nested vector in db that is behind the kys ks
 then applys f with the value as first and args as following arguments and sets the new value"
+  [db ks f & args]
   (dosync
    (let [v (apply f (db-get-in db ks) args)]
      (db-assoc-in db ks v))))
@@ -106,10 +113,11 @@ then applys f with the value as first and args as following arguments and sets t
 		      out) @db)
       (send (:log @db) new-log @db)))
 
-(defn db-init [file time & {gzip :gzip}]
+(defn db-init
   "Initializes a db ref. If the db file (or file.log) already exists loads the data.
 The db is saved every time seconds, so a log is keeped for any manipulation to reconstruct
 data in the case of a crash."
+  [file time & {gzip :gzip}]
   (let [gzip (boolean gzip)
         r {:data {}
            :file (if gzip (str file ".gz") file)
@@ -127,8 +135,9 @@ data in the case of a crash."
               (.start))))
     r))
 
-(defn db-close [db]
+(defn db-close
   "Closes a db, stops the auto saving and writes the entire log into the db file for faster startup."
+  [db]
   (.stop (:thread @db))
   (flush-db db)
   (send (:log @db) (fn [o] (.close o)))
