@@ -56,17 +56,17 @@
 (defn db-assoc-in
   "Associates a value in a nested map in the db. (same as update-in
    with constatly)."
-  [db ks v]
+  [db ks value]
   (dosync
-   (send (:log @db) write-log :assoc-in ks v)
-   (alter db update-in (vec (concat [:data] ks)) (constantly v))))
+   (send (:log @db) write-log :assoc-in ks value)
+   (alter db update-in (vec (concat [:data] ks)) (constantly value))))
 
 (defn db-dissoc-in
   "Dissociates a key in a nested map in the db."
-  [db ks k]
+  [db ks key]
   (dosync
-   (send (:log @db) write-log :dissoc-in [ks k] nil)
-   (alter db update-in (concat [:data] ks) dissoc k)))
+   (send (:log @db) write-log :dissoc-in [ks key] nil)
+   (alter db update-in (concat [:data] ks) dissoc key)))
 
 (defn db-update-in
   "Gets the value from a nested vector in db that is behind the kys ks
