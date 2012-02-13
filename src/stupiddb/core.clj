@@ -1,11 +1,8 @@
 (ns stupiddb.core
   (:import [java.io File PrintWriter PushbackReader FileInputStream FileOutputStream InputStreamReader]
-           [java.util.zip GZIPInputStream GZIPOutputStream]))
+           [java.util.zip GZIPInputStream GZIPOutputStream])
+  (:require [clojure.java.io :as io]))
 
-
-(try
- (require '[clojure.contrib.io :as io])
- (catch Exception e (require '[clojure.contrib.duck-streams :as io])))
 
 (defn- dependant-writer [db arg]
   (if (:gzip db)
